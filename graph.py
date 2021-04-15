@@ -22,4 +22,4 @@ def write_graph(G, filepath="./graph.txt"):
 
 
 def read_graph(filepath="./graph.txt"):
-    return nx.read_adjlist(filepath)
+    return nx.read_adjlist(filepath, nodetype=int)

@@ -1,4 +1,3 @@
-import random
 import sys
 from math import sqrt
 from os import makedirs, path, sep
@@ -7,7 +6,7 @@ import networkx as nx
 import numpy as np
 from tqdm import tqdm
 
-from constants import NUM_NODES
+from common import test_correctness
 from graph import read_graph
 
 
@@ -77,55 +76,33 @@ def calculate_link_similarity(G, total_P, P, S, c, data_folder_name="similarity_
             print("Difference:", str(difference))
         except:
             print("Unexpected error:", sys.exc_info()[0])
-            np.save("similarity_propagation_data" + sep + "most_recent_S.npy", prev_S)
+            np.save(data_folder_name + sep + "most_recent_S.npy", prev_S)
             sys.exit()
         iteration += 1
-
-
-def test_correctness(G, S, n=5000):
-    edges = G.edges()
-    non_edges = set()
-    for i in range(G.number_of_nodes() - 1):
-        for j in range(i + 1, G.number_of_nodes()):
-            non_edges.add((i, j))
-            non_edges.add((j, i))
-    non_edges -= set(edges)
-    non_edges = list(non_edges)
-
-    len_edges = len(edges)
-    len_non_edges = len(non_edges)
-    success_count = 0
-    tie_count = 0
-    for i in range(n):
-        edge = edges[random.randrange(len_edges)]
-        non_edge = non_edges[random.randrange(len_non_edges)]
-
-        if (S[edge[0], edge[1]] > S[non_edge[0], non_edge[1]]):
-            success_count += 1
-        elif (S[edge[0], edge[1]] == S[non_edge[0], non_edge[1]]):
-            tie_count += 1
-
-    return (success_count + 0.5 * tie_count) / n
 
 
 if __name__ == "__main__":
     G = read_graph()
     data_folder_name = "similarity_propagation_data"
 
-    total_P = P = S = None
-    if not (path.exists(data_folder_name + sep + "total_P.npy") and path.exists(data_folder_name + sep + "P.npy") and (path.exists(data_folder_name + sep + "S.npy") or path.exists(data_folder_name + sep + "most_recent_S.npy"))):
-        total_P, P, S = initialize_similarity_matrix(G)
-        if not path.exists(data_folder_name):
-            makedirs(data_folder_name)
-        np.save(data_folder_name + sep + "total_P.npy", total_P)
-        np.save(data_folder_name + sep + "P.npy", P)
-        np.save(data_folder_name + sep + "S.npy", S)
-    else:
-        total_P = np.load(data_folder_name + sep + "total_P.npy")
-        P = np.load(data_folder_name + sep + "P.npy")
-        S = np.load(data_folder_name + sep + "most_recent_S.npy") if path.exists(data_folder_name +
-                                                                                 sep + "most_recent_S.npy") else np.load(data_folder_name + sep + "S.npy")
+    if not (path.exists(data_folder_name + sep + "results.txt")):
+        total_P = P = S = None
+        if not (path.exists(data_folder_name + sep + "total_P.npy") and path.exists(data_folder_name + sep + "P.npy") and (path.exists(data_folder_name + sep + "S.npy") or path.exists(data_folder_name + sep + "most_recent_S.npy"))):
+            total_P, P, S = initialize_similarity_matrix(G)
+            if not path.exists(data_folder_name):
+                makedirs(data_folder_name)
+            np.save(data_folder_name + sep + "total_P.npy", total_P)
+            np.save(data_folder_name + sep + "P.npy", P)
+            np.save(data_folder_name + sep + "S.npy", S)
+        else:
+            total_P = np.load(data_folder_name + sep + "total_P.npy")
+            P = np.load(data_folder_name + sep + "P.npy")
+            S = np.load(data_folder_name + sep + "most_recent_S.npy") if path.exists(data_folder_name +
+                                                                                     sep + "most_recent_S.npy") else np.load(data_folder_name + sep + "S.npy")
 
-    c = 1
-    calculate_link_similarity(G, total_P, P, S, c)
-    np.savetxt(data_folder_name + sep + "results.txt", S)
+        c = 1
+        calculate_link_similarity(G, total_P, P, S, c)
+        np.savetxt(data_folder_name + sep + "results.txt", S)
+    else:
+        S = np.loadtxt(data_folder_name + sep + "results.txt")
+        print(test_correctness(G, S))

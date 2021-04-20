@@ -55,9 +55,10 @@ def initialize_similarity_matrix(G, similarity_metric=jaccard_similarity):
 
 def calculate_link_similarity(G, total_P, P, S, c, data_folder_name="similarity_propagation_data"):
     iteration = 0
+    prev_difference = 0
     difference = 0
 
-    while (iteration == 0 or difference > 0):
+    while (iteration == 0 or abs(difference - prev_difference) > 0):
         print("Iteration", str(iteration))
         prev_S = S.copy()
         try:
@@ -72,6 +73,7 @@ def calculate_link_similarity(G, total_P, P, S, c, data_folder_name="similarity_
                                 similarity_transmission += prev_S[x, y] * (P[x, a] + P[y, b])
                         denom = G.degree[b] * total_P[a] + G.degree[a] * total_P[b]
                         S[a, b] = S[b, a] = similarity_transmission * c / denom if denom > 0 else 0
+            prev_difference = difference
             difference = np.sum(abs(np.subtract(prev_S, S)))
             print("Difference:", str(difference))
         except:
@@ -83,10 +85,11 @@ def calculate_link_similarity(G, total_P, P, S, c, data_folder_name="similarity_
 
 if __name__ == "__main__":
     G = read_graph()
+    S = None
     data_folder_name = "similarity_propagation_data"
 
-    if not (path.exists(data_folder_name + sep + "results.txt")):
-        total_P = P = S = None
+    if not (path.exists(data_folder_name + sep + "results.npy")):
+        total_P = P = None
         if not (path.exists(data_folder_name + sep + "total_P.npy") and path.exists(data_folder_name + sep + "P.npy") and (path.exists(data_folder_name + sep + "S.npy") or path.exists(data_folder_name + sep + "most_recent_S.npy"))):
             total_P, P, S = initialize_similarity_matrix(G)
             if not path.exists(data_folder_name):
@@ -101,8 +104,12 @@ if __name__ == "__main__":
                                                                                      sep + "most_recent_S.npy") else np.load(data_folder_name + sep + "S.npy")
 
         c = 1
+        print("Calculating link similarities.")
         calculate_link_similarity(G, total_P, P, S, c)
-        np.savetxt(data_folder_name + sep + "results.txt", S)
+        np.save(data_folder_name + sep + "results.npy", S)
     else:
-        S = np.loadtxt(data_folder_name + sep + "results.txt")
-        print(test_correctness(G, S))
+        print("Loading most recent link similarity results.")
+        S = np.load(data_folder_name + sep + "results.npy")
+
+    print(test_correctness(G, S))
+    # 0.5162

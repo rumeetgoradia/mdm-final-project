@@ -11,15 +11,6 @@ from constants import DIRECTORY
 from graph import extract_features, read_graph
 
 
-def generate_tag_set(line: str):
-    tags = set()
-    split_line = line.split(" ")
-    if len(split_line) > 1:
-        for i in range(1, int(split_line[0]) + 1):
-            tags.add(int(split_line[i]))
-    return tags
-
-
 def initialize_similarity_matrix(dataset, G, similarity_metric=jaccard_similarity):
     A = nx.adjacency_matrix(G)
 
@@ -43,11 +34,10 @@ def initialize_similarity_matrix(dataset, G, similarity_metric=jaccard_similarit
 
 
 def calculate_link_similarity(G, total_P, P, S, c, saved_results_filepath):
-    iteration = 0
-    prev_difference = 0
+    iteration = 1
     difference = 0
 
-    while (iteration == 0 or abs(difference - prev_difference) > 0):
+    while (iteration == 1 or difference > 0):
         print("Iteration", str(iteration))
         prev_S = S.copy()
         try:
@@ -62,7 +52,6 @@ def calculate_link_similarity(G, total_P, P, S, c, saved_results_filepath):
                                 similarity_transmission += prev_S[x, y] * (P[x, a] + P[y, b])
                         denom = G.degree[b] * total_P[a] + G.degree[a] * total_P[b]
                         S[a, b] = S[b, a] = similarity_transmission * c / denom if denom > 0 else 0
-            prev_difference = difference
             difference = np.sum(abs(np.subtract(prev_S, S)))
             print("Difference:", str(difference))
         except:
@@ -101,11 +90,12 @@ if __name__ == "__main__":
 
         c = 1
         print("Calculating link similarities:")
-        calculate_link_similarity(G, total_P, P, S, c, most_recent_S_path)
-        np.save(results_path)
+        # calculate_link_similarity(G, total_P, P, S, c, most_recent_S_path)
+        np.save(results_path, S)
     else:
         print("Loading most recent link similarity results.")
         S = np.load(results_path)
 
     print(test_correctness(G, S))
     # 0.5162
+    # 0.7287 for twitch pr

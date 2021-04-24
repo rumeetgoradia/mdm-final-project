@@ -36,7 +36,6 @@ def get_communities(G):
     communities = partition(G)
     for comm in set(communities.values()):
         print("Community %d" % comm)
-        print(', '.join([node for node in communities if communities[node] == comm]))
     print("Modularity: %.3f" % get_modularity(G, communities))
     return communities
 

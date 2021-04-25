@@ -51,16 +51,19 @@ def test_correctness(G, S, n=5000):
             tie_count += 1
 
     return (success_count + 0.5 * tie_count) / n
-def precision_testing(G,S,ds,thresh = 0.75):
+def precision_testing(G,S,ds,thresh = 0.75, sample_size = 30, edges_removed = 100):
     trials = 0
     test = 0
-    while test < 30:
+    while test < sample_size:
         removed_edges = {}
         i = 0
-        while(i < 500): #random removal of edges
+        while(i < edges_removed): #random removal of edges
             rnd_node_1 = random.randint(0,DATASETS[ds]-1)
             node_1_index = random.randint(0,len(list(G.edges(rnd_node_1))))
             G.remove_edge(rnd_node_1,node_1_index)
+            if not ((nx.number_connected_components(G) == 1) and (len(G.nodes) == DATASETS[ds])):
+                G.add_edge(rnd_node_1,node_1_index)
+                continue
             if rnd_node_1 in removed_edges.keys():
                 removed_edges[rnd_node_1].append(node_1_index)
             else:
@@ -95,7 +98,7 @@ def precision_testing(G,S,ds,thresh = 0.75):
                 G.add_edge(n1,n2)
         trials = trials + ((true_positive)/total_positive)*0.5
         test = test + 1
-    return trials/30
+    return trials/sample_size
 
 
     

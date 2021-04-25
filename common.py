@@ -1,7 +1,6 @@
 import random
 import sys
 from math import sqrt
-
 import networkx as nx
 import numpy as np
 from tqdm import tqdm
@@ -52,3 +51,58 @@ def test_correctness(G, S, n=5000):
             tie_count += 1
 
     return (success_count + 0.5 * tie_count) / n
+def precision_testing(G,S,ds,thresh = 0.75):
+    trials = 0
+    test = 0
+    while test < 30:
+        removed_edges = {}
+        i = 0
+        while(i < 500): #random removal of edges
+            rnd_node_1 = random.randint(0,DATASETS[ds]-1)
+            node_1_index = random.randint(0,len(list(G.edges(rnd_node_1))))
+            G.remove_edge(rnd_node_1,node_1_index)
+            if rnd_node_1 in removed_edges.keys():
+                removed_edges[rnd_node_1].append(node_1_index)
+            else:
+                removed_edges[rnd_node_1] = []
+                removed_edges[rnd_node_1].append(node_1_index)
+            i = i + 1
+        i = j = 0
+        total_positive = 0
+        true_positive = 0
+        while i < DATASETS[ds]-1: 
+            while j < DATASETS[ds]-1:
+                if S[i][j] >= thresh:
+                    if(not G.has_edge(i,j)):
+                        if(i in removed_edges.keys()): #double counting true/all positives
+                            if(j in removed_edges[i]): 
+                                true_positive = true_positive + 1
+                                total_positive = total_positive + 1
+                            else:
+                                total_positive = total_positive + 1
+                        elif(j in removed_edges.keys()):
+                            if(i in removed_edges[j]):
+                                true_positive = true_positive + 1
+                                total_positive = total_positive + 1
+                            else:
+                                total_positive = total_positive + 1
+                        else:
+                            total_positive = total_positive + 1
+                j = j + 1
+            i = i + 1
+        for n1, v in removed_edges:
+            for n2 in v:
+                G.add_edge(n1,n2)
+        trials = trials + ((true_positive)/total_positive)*0.5
+        test = test + 1
+    return trials/30
+
+
+    
+    
+
+    
+    
+
+
+

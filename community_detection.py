@@ -14,8 +14,8 @@ from graph import read_graph
 
 
 def get_communities(G):
-    greedy_communities = community.greedy_modularity_communities
-    print("GREEDY MODULARITY:", community.modularity(G, greedy_communities))
+    greedy_communities = community.greedy_modularity_communities(G)
+    print("GREEDY MODULARITY:", (community.modularity(G, greedy_communities)))
     print(len(list(greedy_communities)))
     # communities_generator = community.girvan_newman(G)
     # communities = next(communities_generator)
@@ -33,7 +33,7 @@ def get_communities(G):
 
     # return np.array([list(c) for c in communities])
 
-    communities = partition(G)
+    communities = partition(G) #busted
     for comm in set(communities.values()):
         print("Community %d" % comm)
     print("Modularity: %.3f" % get_modularity(G, communities))

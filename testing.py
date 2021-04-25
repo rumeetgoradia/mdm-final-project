@@ -5,16 +5,16 @@ import networkx as nx
 import numpy as np
 from tqdm import tqdm
 
-from constants import DATASETS
+from constants import NUM_NODES
 
 def edge_removal(G,ds,edges_removed = 100):
     removed_edges = {}
     i = 0
     while(i < edges_removed): #random removal of edges
-        rnd_node_1 = random.randint(0,DATASETS[ds]-1)
+        rnd_node_1 = random.randint(0,NUM_NODES[ds]-1)
         node_1_index = random.randint(0,len(list(G.edges(rnd_node_1))))
         G.remove_edge(rnd_node_1,node_1_index)
-        if not ((nx.number_connected_components(G) == 1) and (len(G.nodes) == DATASETS[ds])): #ensure no single edges btw two nodes are cut, graph is conn
+        if not ((nx.number_connected_components(G) == 1) and (len(G.nodes) == NUM_NODES[ds])): #ensure no single edges btw two nodes are cut, graph is conn
             G.add_edge(rnd_node_1,node_1_index)
             continue
         if rnd_node_1 in removed_edges.keys():
@@ -65,8 +65,8 @@ def precision_testing(G,removed_edges,S,ds,thresh = 0.75):
     i = j = 0
     total_positive = 0
     true_positive = 0
-    while i < DATASETS[ds]-1: 
-        while j < DATASETS[ds]-1:
+    while i < NUM_NODES[ds]-1: 
+        while j < NUM_NODES[ds]-1:
             if S[i][j] >= thresh:
                 if(not G.has_edge(i,j)):
                     if(i in removed_edges.keys()): #double counting true/all positives

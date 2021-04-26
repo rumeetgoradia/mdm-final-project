@@ -9,24 +9,22 @@ from constants import NUM_NODES
 
 def edge_removal(G,ds,edges_removed = 100):
     removed_edges = {}
-    i = 0
-    while(i < edges_removed): #random removal of edges
+    for i in tqdm(range(edges_removed)): #random removal of edges
         rnd_node_1 = random.randint(0,NUM_NODES[ds]-1)
-        node_1_index = random.randint(0,len(list(G.edges(rnd_node_1))))
-        G.remove_edge(rnd_node_1,node_1_index)
-        if not ((nx.number_connected_components(G) == 1) and (len(G.nodes) == NUM_NODES[ds])): #ensure no single edges btw two nodes are cut, graph is conn
-            G.add_edge(rnd_node_1,node_1_index)
-            continue
+        rnd_node_2 = list(G.adj[rnd_node_1])[random.randint(0,len(list(G.adj[rnd_node_1]))-1)]
+        G.remove_edge(rnd_node_1,rnd_node_2)
+        if(not ((nx.number_connected_components(G) == 1) and (len(G.nodes) == NUM_NODES[ds]))): #ensure no single edges btw two nodes are cut, graph is conn
+            G.add_edge(rnd_node_1,rnd_node_2)
+            continue #wanted to introduce looping mechanism but i decided to forgo it for now
         if rnd_node_1 in removed_edges.keys():
-            removed_edges[rnd_node_1].append(node_1_index)
+            removed_edges[rnd_node_1].append(rnd_node_2)
         else:
             removed_edges[rnd_node_1] = []
-            removed_edges[rnd_node_1].append(node_1_index)
-        i = i + 1
+            removed_edges[rnd_node_1].append(rnd_node_2)
     return G, removed_edges
 
 def edge_addback(G,removed_edges): #young laflame sicko mode
-    for n1, v in removed_edges:
+    for n1, v in removed_edges.items():
         for n2 in v:
             G.add_edge(n1,n2)
     return G
@@ -57,7 +55,7 @@ def test_correctness(G, S, n=5000):
             tie_count += 1
 
     return (success_count + 0.5 * tie_count) / n
-def precision_testing(G,removed_edges,S,ds,thresh = 0.75): 
+def precision_testing(G,removed_edges,S,ds,thresh = 0.5): 
     # before using this function, you must randomly remove edges using the
     # edge removal method, and then pass in the result
     # after the method has ended, add back in the edges you have removed
@@ -65,8 +63,8 @@ def precision_testing(G,removed_edges,S,ds,thresh = 0.75):
     i = j = 0
     total_positive = 0
     true_positive = 0
-    while i < NUM_NODES[ds]-1: 
-        while j < NUM_NODES[ds]-1:
+    for i in tqdm(range(NUM_NODES[ds]),desc="Checking Above Thresh"): 
+        for j in range(NUM_NODES[ds]):
             if S[i][j] >= thresh:
                 if(not G.has_edge(i,j)):
                     if(i in removed_edges.keys()): #double counting true/all positives
@@ -83,6 +81,6 @@ def precision_testing(G,removed_edges,S,ds,thresh = 0.75):
                             total_positive = total_positive + 1
                     else:
                         total_positive = total_positive + 1
-            j = j + 1
-        i = i + 1
-    return ((true_positive)/total_positive)*0.5
+    print(true_positive*0.5)
+    print(total_positive*0.5)
+    return ((true_positive)/total_positive) #double counted both

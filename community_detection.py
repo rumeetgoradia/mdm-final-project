@@ -9,7 +9,7 @@ from constants import DATASETS, DIRECTORY
 from graph import read_graph
 
 
-def get_communities(G):
+def generate_communities(G):
     communities_list = list(community.greedy_modularity_communities(G))
     print("# of Communities:", str(len(communities_list)))
     print("Modularity:", str(community.modularity(G, communities_list)))
@@ -33,17 +33,23 @@ def write_communities(dataset: str, communities: dict):
 def read_communities(dataset: str):
     communities = {}
     data_directory = os.path.join(DIRECTORY, "communities")
-    with open(os.path.join(data_directory, dataset + "-communities.csv"), "r") as communities_file:
-        reader = csv.reader(communities_file)
-        for row in reader:
-            communities[row[0]] = row[1]
+
+    try:
+        with open(os.path.join(data_directory, dataset + "-communities.csv"), "r") as communities_file:
+            reader = csv.reader(communities_file)
+            for row in reader:
+                communities[int(row[0])] = int(row[1])
+    except:
+        G = read_graph(dataset)
+        communities = generate_communities(G)
+        write_communities(dataset, communities)
 
     return communities
 
 
 if __name__ == "__main__":
-    for dataset in tqdm(DATASETS):
-        print("Communities for", dataset, "dataset")
+    for dataset in DATASETS:
+        print("Detecting communities for", dataset, "dataset")        
         G = read_graph(dataset)
-        communities = get_communities(G)
+        communities = generate_communities(G)
         write_communities(dataset, communities)

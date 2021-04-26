@@ -7,11 +7,13 @@ import numpy as np
 from tqdm import tqdm
 
 from common import check_input_valid, jaccard_similarity, test_correctness
+from community_detection import read_communities
 from constants import DIRECTORY
 from graph import extract_features, read_graph
+from similarity_propagation import calculate_link_similarity
 
 
-def initialize_similarity_matrix(dataset, G, similarity_metric=jaccard_similarity):
+def initialize_similarity_matrix(dataset, G, communities):
     A = nx.adjacency_matrix(G)
 
     total_P = np.zeros(shape=A.shape[0])
@@ -21,10 +23,15 @@ def initialize_similarity_matrix(dataset, G, similarity_metric=jaccard_similarit
     features = extract_features(dataset)
 
     for i in tqdm(range(len(features)), desc="Calculating initial similarities"):
-        first_node_tags = features[i]
+        first_node_features = features[i]
+        first_node_edges = set(G[i])
         for j in range(i, len(features)):
-            second_node_tags = features[j]
-            S[i, j] = S[j, i] = similarity_metric(first_node_tags, second_node_tags)
+            if communities[i] != communities[j]:
+                second_node_features = features[j]
+                S[i, j] = S[j, i] = jaccard_similarity(first_node_features, second_node_features)
+            else:
+                second_node_edges = set(G[j])
+                S[i, j] = S[j, i] = jaccard_similarity(first_node_edges, second_node_edges)
             P[i, j] = P[j, i] = S[i, j] * A[i, j]
             total_P[i] += P[i, j]
             if i != j:
@@ -33,17 +40,7 @@ def initialize_similarity_matrix(dataset, G, similarity_metric=jaccard_similarit
     return total_P, P, S
 
 
-def calculate_link_similarity(G, S, prev_S, P, total_P, a, b):
-
-    similarity_transmission = 0
-    for x in G[a]:
-        for y in G[b]:
-            similarity_transmission += prev_S[x, y] * (P[x, a] + P[y, b])
-    denom = G.degree[b] * total_P[a] + G.degree[a] * total_P[b]
-    S[a, b] = S[b, a] = similarity_transmission * 1 / denom if denom > 0 else 0
-
-
-def fill_similarity_matrix(G, total_P, P, S, saved_results_filepath):
+def fill_similarity_matrix(G, communities, total_P, P, S, saved_results_filepath):
     iteration = 1
     difference = 0
 
@@ -55,23 +52,25 @@ def fill_similarity_matrix(G, total_P, P, S, saved_results_filepath):
                 for b in range(a, S.shape[1]):
                     if (a == b):
                         S[a, b] = 1
-                    else:
+                    elif (communities[a] != communities[b]):
                         calculate_link_similarity(G, S, prev_S, P, total_P, a, b)
             difference = np.sum(abs(np.subtract(prev_S, S)))
             print("Difference:", str(difference))
         except:
-            print("Unexpected error:", sys.exc_info()[0])
+            print("Saving most recent similarity matrix and stopping calculations.")
             np.save(saved_results_filepath, prev_S)
-            sys.exit()
+            return
+            # sys.exit()
         iteration += 1
 
 
 if __name__ == "__main__":
     dataset = check_input_valid(sys.argv)
     G = read_graph(dataset)
+    communities = read_communities(dataset)
     S = None
 
-    data_directory = os.path.join(DIRECTORY, "similarity_propagation_data", dataset)
+    data_directory = os.path.join(DIRECTORY, "dynamic_link_prediction_data", dataset)
     Path(data_directory).mkdir(parents=True, exist_ok=True)
     total_P_path = os.path.join(data_directory, "total_P.npy")
     P_path = os.path.join(data_directory, "P.npy")
@@ -84,7 +83,7 @@ if __name__ == "__main__":
         if not (os.path.exists(total_P_path) and
                 os.path.exists(P_path) and
                 (os.path.exists(S_path) or os.path.exists(most_recent_S_path))):
-            total_P, P, S = initialize_similarity_matrix(dataset, G)
+            total_P, P, S = initialize_similarity_matrix(dataset, G, communities)
             np.save(total_P_path, total_P)
             np.save(P_path, P)
             np.save(S_path, S)
@@ -94,12 +93,12 @@ if __name__ == "__main__":
             S = np.load(most_recent_S_path) if os.path.exists(most_recent_S_path) else np.load(S_path)
 
         print("Calculating link similarities:")
-        calculate_link_similarity(G, total_P, P, S, most_recent_S_path)
+        fill_similarity_matrix(G, communities, total_P, P, S, most_recent_S_path)
         np.save(results_path, S)
     else:
         print("Loading most recent link similarity results.")
         S = np.load(results_path)
 
     print(test_correctness(G, S))
-    # 0.5162
-    # 0.7287 for twitch pr
+    # twitch-pr: 0.53
+    # last-fm: 0.5

@@ -34,7 +34,14 @@ def write_graph(G, dataset: str):
 
 
 def read_graph(dataset: str):
-    return nx.read_adjlist(os.path.join(DIRECTORY, "graphs", dataset + "-graph.txt"), nodetype=int)
+    G = None
+    try:
+        G = nx.read_adjlist(os.path.join(DIRECTORY, "graphs", dataset + "-graph.txt"), nodetype=int)
+    except:
+        G = create_graph(dataset)
+        write_graph(G, dataset)
+
+    return G
 
 
 def extract_features(dataset: str):
@@ -45,8 +52,8 @@ def extract_features(dataset: str):
                 split_line = line.split(" ")
                 features_set = set()
                 if len(split_line) > 1:
-                    for i in range(1, int(split_line[0]) + 1):
-                        features_set.add(int(split_line[i]))
+                    for j in range(1, int(split_line[0]) + 1):
+                        features_set.add(int(split_line[j]))
                 features[i] = features_set
     else:
         with open(os.path.join(DIRECTORY, "data", dataset, "features.json"), "r") as features_file:
@@ -61,7 +68,7 @@ def extract_features(dataset: str):
 
 
 if __name__ == "__main__":
-
-    for dataset in tqdm(DATASETS, desc="Creating graphs for datasets"):
+    for dataset in DATASETS:
+        print("Creating graph for", dataset, "dataset")        
         G = create_graph(dataset)
         write_graph(G, dataset)

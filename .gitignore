@@ -2,3 +2,6 @@
 __pycache__/
 test.py
 similarity_propagation_data/
+dynamic_link_prediction_data/
+.vscode/
+edge_similarity_data/

@@ -1,7 +1,6 @@
 import os
 
 DATASETS = [
-    "citeulike",
     "lastfm",
     "twitch-de",
     "twitch-en",
@@ -12,7 +11,6 @@ DATASETS = [
 ]
 
 NUM_NODES = {
-    "citeulike": 16980,
     "lastfm": 7624,
     "twitch-de": 9498,
     "twitch-en": 7126,

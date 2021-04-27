@@ -44,7 +44,7 @@ def fill_similarity_matrix(G, communities, total_P, P, S, saved_results_filepath
     iteration = 1
     difference = 0
 
-    while (iteration == 1 or difference > 0):
+    while (iteration == 1 or difference >= (10**(-4))):
         print("Iteration", str(iteration))
         prev_S = S.copy()
         try:

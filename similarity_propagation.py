@@ -78,6 +78,7 @@ if __name__ == "__main__":
     S_path = os.path.join(data_directory, "S.npy")
     most_recent_S_path = os.path.join(data_directory, "most_recent_S.npy")
     results_path = os.path.join(data_directory, "results.npy")
+    score_path = os.path.join(data_directory, "score.txt")
 
     if not (os.path.exists(results_path)):
         total_P = P = None
@@ -100,6 +101,9 @@ if __name__ == "__main__":
         print("Loading most recent link similarity results.")
         S = np.load(results_path)
 
-    print(test_correctness(G, S))
+    with open(score_path, "w") as score_file:
+        score = test_correctness(G, S)
+        print(score)
+        score_file.write(str(score))
     # 0.5162
     # 0.7287 for twitch pr

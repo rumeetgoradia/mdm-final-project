@@ -30,6 +30,7 @@ if __name__ == "__main__":
     data_directory = os.path.join(DIRECTORY, "edge_similarity_data", dataset)
     Path(data_directory).mkdir(parents=True, exist_ok=True)
     results_path = os.path.join(data_directory, "results.npy")
+    score_path = os.path.join(data_directory, "score.txt")
 
     if os.path.exists(results_path):
         S = np.load(results_path)
@@ -37,4 +38,7 @@ if __name__ == "__main__":
         S = fill_similarity_matrix(G)
         np.save(results_path, S)
 
-    print(test_correctness(G, S))
+    with open(score_path, "w") as score_file:
+        score = test_correctness(G, S)
+        print(score)
+        score_file.write(str(score))

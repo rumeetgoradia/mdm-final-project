@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 
 from networkx.algorithms import community
-from tqdm import tqdm
 
 from constants import DATASETS, DIRECTORY
 from graph import read_graph
@@ -49,7 +48,7 @@ def read_communities(dataset: str):
 
 if __name__ == "__main__":
     for dataset in DATASETS:
-        print("Detecting communities for", dataset, "dataset")        
+        print("Detecting communities for", dataset, "dataset")
         G = read_graph(dataset)
         communities = generate_communities(G)
         write_communities(dataset, communities)

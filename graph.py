@@ -4,7 +4,6 @@ import os
 
 import networkx as nx
 import numpy as np
-from tqdm import tqdm
 
 from constants import DATASETS, DIRECTORY, NUM_NODES
 

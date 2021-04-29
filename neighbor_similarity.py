@@ -27,7 +27,7 @@ if __name__ == "__main__":
     dataset = check_input_valid(sys.argv)
     G = read_graph(dataset)
 
-    data_directory = os.path.join(DIRECTORY, "edge_similarity_data", dataset)
+    data_directory = os.path.join(DIRECTORY, "neighbor_similarity_data", dataset)
     Path(data_directory).mkdir(parents=True, exist_ok=True)
     results_path = os.path.join(data_directory, "results.npy")
     score_path = os.path.join(data_directory, "score.txt")
